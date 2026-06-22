@@ -1,0 +1,20 @@
+{
+  "name": "saihm-demo-qwen",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Runnable demo: a client-side-encrypted SAIHM memory wired to Qwen, with provable cryptographic erasure. Runs fully offline (zero signup) against a local blind sandbox, or live against the hosted SAIHM endpoint.",
+  "scripts": {
+    "start": "node demo.mjs",
+    "demo": "node demo.mjs"
+  },
+  "license": "Apache-2.0",
+  "author": "SAIHM",
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@saihm/mcp-server-pro": "^0.1.0",
+    "@saihm/client-pro": "^0.1.1"
+  }
+}
