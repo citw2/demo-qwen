@@ -1,6 +1,6 @@
 // Minimal, dependency-free model callers for the demo. Bring your own key (BYOK).
 //
-// Pick any two models to run side by side via MODEL_A / MODEL_B (see demo.mjs).
+// This demo grounds a single model, selected by the MODEL constant in demo.mjs.
 // Each provider reads its own API key from the environment; with no key set, that
 // model answers in a deterministic OFFLINE MOCK so the demo runs with zero setup.
 // The mock is grounded ONLY in the facts passed to it — so when SAIHM forgets a
