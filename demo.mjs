@@ -7,10 +7,11 @@
 // Optional, for a LIVE Qwen answer instead of the offline mock:
 //   export DASHSCOPE_API_KEY=...
 //
-// Optional, to run against the REAL hosted SAIHM service (paid; see README "Go live"):
+// Optional, to run against the REAL hosted SAIHM service (start free, no card; see README "Go live"):
 //   export SAIHM_ENDPOINT_URL=https://saihm.coti.global/mcp
-//   export SAIHM_AUTH_HEADER="Bearer <your-onboard-JWT>"
 //   export SAIHM_MASTER_SECRET_HEX=<at least 64 hex chars, held only by you>
+//   export SAIHM_TIER=FREE   # free tier — run `npx -y @saihm/mcp-server-pro free-join` once first
+//   # …or a paid Pro membership instead:  export SAIHM_AUTH_HEADER="Bearer <your-onboard-JWT>"
 
 import { randomBytes } from 'node:crypto';
 import { deriveIdentity, toHex, fromHex } from '@saihm/client-pro';
@@ -34,11 +35,16 @@ async function ground(facts) {
 async function connect() {
   const liveUrl = process.env.SAIHM_ENDPOINT_URL;
   if (liveUrl) {
-    const authHeader = process.env.SAIHM_AUTH_HEADER;
     const secretHex = process.env.SAIHM_MASTER_SECRET_HEX;
-    if (!authHeader || !secretHex) throw new Error('LIVE mode needs SAIHM_AUTH_HEADER (Bearer <JWT>) and SAIHM_MASTER_SECRET_HEX too.');
-    const saihm = new SaihmProClient(liveUrl, authHeader, fromHex(secretHex.trim()), {}); // tier resolved from your JWT
-    return { saihm, where: `${liveUrl}  (LIVE)`, close: async () => {} };
+    if (!secretHex) throw new Error('LIVE mode needs SAIHM_MASTER_SECRET_HEX (>= 64 hex chars, held only by you).');
+    const authHeader = process.env.SAIHM_AUTH_HEADER;   // paid: a Bearer JWT you already hold
+    const tier = process.env.SAIHM_TIER;                // free: SAIHM_TIER=FREE (run `npx -y @saihm/mcp-server-pro free-join` once first)
+    if (!authHeader && !tier) throw new Error('LIVE mode needs SAIHM_AUTH_HEADER (Bearer <JWT>), or SAIHM_TIER=FREE for the free tier (run `npx -y @saihm/mcp-server-pro free-join` first).');
+    const opts = {};
+    if (tier) opts.tier = tier;
+    if (process.env.SAIHM_PAYMENT_METHOD) opts.paymentMethod = process.env.SAIHM_PAYMENT_METHOD;
+    const saihm = new SaihmProClient(liveUrl, authHeader, fromHex(secretHex.trim()), opts); // tier from your JWT, or SAIHM_TIER to self-onboard
+    return { saihm, where: `${liveUrl}  (LIVE${tier ? ', ' + tier : ''})`, close: async () => {} };
   }
   const { url, close } = await startSandbox();
   const master = randomBytes(32); // a throwaway identity, held only on this machine
@@ -87,12 +93,18 @@ async function main() {
 
     rule();
     line('Your memory is yours: portable to every other model, and erasure you can prove.');
-    line('Run it for real : set SAIHM_ENDPOINT_URL=https://saihm.coti.global/mcp (see README).');
-    line('Join SAIHM      : https://saihm.coti.global/join');
+    line('Try it live free: npx -y @saihm/mcp-server-pro free-join, then set SAIHM_ENDPOINT_URL + SAIHM_TIER=FREE (see README).');
+    line('Or go Pro       : https://saihm.coti.global/join');
     rule();
   } finally {
     await close();
   }
 }
 
-main().catch((e) => { console.error('demo failed:', e?.message ?? e); process.exit(1); });
+main().catch((e) => {
+  const m = e?.message ?? String(e);
+  console.error('demo failed:', m);
+  if (process.env.SAIHM_TIER === 'FREE' && !process.env.SAIHM_AUTH_HEADER && /401|unauthorized|entitl/i.test(m))
+    console.error('hint: run `npx -y @saihm/mcp-server-pro free-join` once first to activate the free tier (a one-time GitHub check, no card).');
+  process.exit(1);
+});

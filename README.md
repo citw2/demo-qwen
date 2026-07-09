@@ -38,13 +38,15 @@ A per-vendor “memory” feature keeps your context inside one vendor’s accou
 
 The local sandbox is a throwaway stand-in so you can try the protocol offline — it is **not** the SAIHM service and stores nothing beyond the current process. To run the same demo against the real, hosted, blind endpoint:
 
-1. **Join SAIHM** at **[saihm.coti.global/join](https://saihm.coti.global/join)** and onboard to obtain your JWT. (Going live requires a paid membership — there is no free tier.)
+1. **Start free — no card.** Run `npx -y @saihm/mcp-server-pro free-join` once to activate a **free tier** (a one-time, lifetime allowance) on an identity you hold. For production, **[Join SAIHM](https://saihm.coti.global/join)** for a paid Pro membership and onboard to obtain a JWT.
 2. Point the demo at the live endpoint:
 
    ```
    export SAIHM_ENDPOINT_URL=https://saihm.coti.global/mcp
-   export SAIHM_AUTH_HEADER="Bearer <your-onboard-JWT>"
    export SAIHM_MASTER_SECRET_HEX=<at least 64 hex chars, generated and held only by you>
+   export SAIHM_TIER=FREE                      # free tier (after the free-join above)
+   # …or a paid Pro membership instead:
+   # export SAIHM_AUTH_HEADER="Bearer <your-onboard-JWT>"
    node demo.mjs
    ```
 
